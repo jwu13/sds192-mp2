@@ -20,4 +20,9 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
+```{r}
+summary(house_elections)
+```
+
+
 > Word count: `r wordcountaddin::word_count()`

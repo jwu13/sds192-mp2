@@ -21,10 +21,8 @@ Verify that your data looks like this:
 
 ```{r, eval=TRUE, message=FALSE}
 library(tidyverse)
-glimpse(house_elections)
-glimpse(candidates)
-glimpse(committees)
-glimpse(contributions)
+head(house_elections)
+
 ```
 
 > Make sure that the row and column counts match!
