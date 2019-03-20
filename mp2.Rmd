@@ -6,13 +6,10 @@ output:
   html_document:
     code_folding: hide
 ---
-
-
 ## Loading the data
-
 This project is so interesting and relevant to my life!
 
-```{r, message=FALSE}
+```{r, message = FALSE, warnings = FALSE}
 library(tidyverse)
 load("house_elections.rda")
 load("candidates.rda")
@@ -20,9 +17,90 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
+TRANSACTION_AMT (transaction amount)
+ENTITY_TP (the type of entity)
+
+```{r message = FALSE, warnings = FALSE}
+library(tidyverse)
+candidates_filtered <- candidates %>%
+  select(cand_id, cand_party_affiliation, cand_election_yr, cand_office_state, cand_office, cand_status, cand_pcc, cand_state)
+```
+
+```{r message = FALSE, warnings = FALSE}
+committee_filtered <- committees %>%
+  select(cmte_id, cmte_name, cmte_state, cmte_type, cmte_party_affiliation, org_type, cand_id)
+```
+
+```{r message = FALSE, warnings = FALSE}
+contributions_filtered <- contributions %>%
+  select(cmte_id, transaction_type, entity_type, state, transaction_amt, other_id, cand_id)
+```
+
+```{r message = FALSE, warnings = FALSE}
+joined1 <- contributions_filtered %>%
+  full_join(candidates_filtered, by = c("cand_id" = "cand_id"))
+```
+
+```{r message = FALSE, warnings = FALSE}
+joined2 <- joined1 %>%
+  full_join(committee_filtered, by = c("cmte_id" = "cmte_id"))
+```
+
+```{r message = FALSE, warnings = FALSE}
+west <- c("WA", "OR", "CA", "AZ", "NM", "CO", "WY", "MT", "ID", "NV", "UT")
+midwest <- c("ND", "SD", "NE", "KS", "MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH")
+south <- c("TX", "OK", "AR", "LA", "KY", "TN", "MS", "AL", "GA", "FL", "SC", "NC", "VA", "WV", "MD", "DC", "DE")
+northeast <- c("ME", "NH", "VT", "MA", "MA", "CT", "RI", "NJ", "PA", "NY")
+```
+
+```{r message = FALSE, warnings = FALSE}
+joined3 <- joined2 %>%
+  filter(state %in% west | state %in% midwest) %>%
+  mutate(na.rm = TRUE, region = ifelse(state %in% west, "west", "midwest"))
+
+joined4 <- joined2 %>%
+  filter(state %in% south | state %in% northeast) %>%
+  mutate(na.rm = TRUE, region = ifelse(state %in% south, "south", "northeast"))
+
+joined5 <- joined3 %>%
+  full_join(joined4)
+```
+
+```{r}
+joined6 <- joined5 %>%
+  full_join(house_elections, by = c("cand_id.x" = "fec_id"))
+```
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+joined6 %>%
+  filter(!is.na(transaction_amt) & primary_votes != 0 & !is.na(primary_votes))
+
+```
+
+```{r}
+ggplot(joined6, aes(x = cand_election_yr, y = primary_votes, color = region)) +
+  geom_jitter(alpha = 0.1)
+```
+
+
+```{r message = FALSE, warnings = FALSE}
+analysis1 <- joined5 %>%
+  group_by(region) %>%
+  summarise(mean_transaction = mean(transaction_amt))
+```
+
+```{r}
+ggplot(joined5, aes(x = cand_election_yr, y = transaction_amt, color = region)) +
+  geom_point(position = "jitter")
+  
+```
+
+
+
 ```{r}
 summary(house_elections)
 ```
-
 
 > Word count: `r wordcountaddin::word_count()`
