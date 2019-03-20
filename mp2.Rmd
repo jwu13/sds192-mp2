@@ -4,7 +4,7 @@ author: "Your Name Here"
 date: "2019-03-24"
 output: 
   html_document:
-    code_folding: show
+    code_folding: hide
 ---
 
 
