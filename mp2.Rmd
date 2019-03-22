@@ -7,8 +7,6 @@ output:
     code_folding: hide
 ---
 ## Loading the data
-This project is so interesting and relevant to my life!
-
 ```{r, message = FALSE, warnings = FALSE}
 library(tidyverse)
 load("house_elections.rda")
@@ -17,33 +15,55 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
-TRANSACTION_AMT (transaction amount)
-ENTITY_TP (the type of entity)
-
 ```{r message = FALSE, warnings = FALSE}
-library(tidyverse)
-candidates_filtered <- candidates %>%
-  select(cand_id, cand_party_affiliation, cand_election_yr, cand_office_state, cand_office, cand_status, cand_pcc, cand_state)
+candidates_2 <- candidates %>%
+  select(cand_id, cand_party_affiliation, cand_election_yr, cand_office, cand_state) %>%
+  filter(cand_party_affiliation %in% c("DEM", "REP"))
 ```
+### cand_office
+H = House
+P = President
+S = Senate
 
 ```{r message = FALSE, warnings = FALSE}
-committee_filtered <- committees %>%
-  select(cmte_id, cmte_name, cmte_state, cmte_type, cmte_party_affiliation, org_type, cand_id)
+committee_2 <- committees %>%
+  select(cmte_id, cmte_state, cmte_type, org_type)
 ```
+### cmte_type
+### org_type
+C = Corporation
+L = Labor organization
+M = Membership organization
+T = Trade association
+V = Cooperative
+W = Corporation without capital stock
 
 ```{r message = FALSE, warnings = FALSE}
-contributions_filtered <- contributions %>%
-  select(cmte_id, transaction_type, entity_type, state, transaction_amt, other_id, cand_id)
+contributions_2 <- contributions %>%
+  select(cmte_id, entity_type, transaction_amt, other_id, cand_id)
 ```
+### entity_type
+CAN = Candidate
+CCM = Candidate Committee
+COM = Committee
+IND = Individual (a person)
+ORG = Organization (not a committee and not a person)
+PAC = Political Action Committee
+PTY = Party Organization
+### other_id
+FEC ID of the recipient committee or the supported or opposed candidate ID.
+### cand_id
+Candidate receiving money from the filing committee
+
 
 ```{r message = FALSE, warnings = FALSE}
-joined1 <- contributions_filtered %>%
-  full_join(candidates_filtered, by = c("cand_id" = "cand_id"))
+joined1 <- contributions_2 %>%
+  full_join(candidates_2, by = c("cand_id" = "cand_id"))
 ```
 
 ```{r message = FALSE, warnings = FALSE}
 joined2 <- joined1 %>%
-  full_join(committee_filtered, by = c("cmte_id" = "cmte_id"))
+  full_join(committee_2, by = c("cmte_id" = "cmte_id"))
 ```
 
 ```{r message = FALSE, warnings = FALSE}
@@ -94,13 +114,8 @@ analysis1 <- joined5 %>%
 ```{r}
 ggplot(joined5, aes(x = cand_election_yr, y = transaction_amt, color = region)) +
   geom_point(position = "jitter")
-  
 ```
 
-
-
-```{r}
-summary(house_elections)
-```
 
 > Word count: `r wordcountaddin::word_count()`
+
