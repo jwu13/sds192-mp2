@@ -1,121 +1,123 @@
 ---
 title: "Mini-Project 2"
-author: "Your Name Here"
+author: "Sarah Wu, Junru Wu, Irene Xu"
 date: "2019-03-24"
 output: 
   html_document:
     code_folding: hide
 ---
-## Loading the data
-```{r, message = FALSE, warnings = FALSE}
+```{r include = FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)
+library(ggthemes)
+```
+### Introduction 
+In the 2012 U.S House Election, we are interested in how candidates' party affiliation and the type of committee supporting them affect the relationship between the amount of money contributed to support candidates and the general votes these candidates received.
+
+### 1. Loading data
+```{r, message = FALSE, warning = FALSE}
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 ```
-
-```{r message = FALSE, warnings = FALSE}
+### 2. Data wrangling
++ We kept the house candidates affiliated with the Democratic Party or the Republican Party and kept the variables indicating their id and party affiliation.
+```{r message = FALSE, warning = FALSE}
 candidates_2 <- candidates %>%
-  select(cand_id, cand_party_affiliation, cand_election_yr, cand_office, cand_state) %>%
-  filter(cand_party_affiliation %in% c("DEM", "REP"))
+  select(cand_id, cand_party_affiliation, cand_office) %>%
+  filter(cand_party_affiliation %in% c("DEM", "REP")) %>%
+  filter(cand_office == "H") %>%
+  mutate(cand_party = ifelse(cand_party_affiliation == "DEM", "Democratic Party", "Republican Party")) %>%
+  select(cand_id, cand_party) 
 ```
-### cand_office
-H = House
-P = President
-S = Senate
-
-```{r message = FALSE, warnings = FALSE}
-committee_2 <- committees %>%
-  select(cmte_id, cmte_state, cmte_type, org_type)
-```
-### cmte_type
-### org_type
-C = Corporation
-L = Labor organization
-M = Membership organization
-T = Trade association
-V = Cooperative
-W = Corporation without capital stock
-
-```{r message = FALSE, warnings = FALSE}
++ In the contributions dataset, we were interested in the amount of transaction committees used to support candidates.
+```{r message = FALSE, warning = FALSE}
 contributions_2 <- contributions %>%
-  select(cmte_id, entity_type, transaction_amt, other_id, cand_id)
+  filter(transaction_amt > 0) %>%
+  select(cand_id, transaction_amt)
 ```
-### entity_type
-CAN = Candidate
-CCM = Candidate Committee
-COM = Committee
-IND = Individual (a person)
-ORG = Organization (not a committee and not a person)
-PAC = Political Action Committee
-PTY = Party Organization
-### other_id
-FEC ID of the recipient committee or the supported or opposed candidate ID.
-### cand_id
-Candidate receiving money from the filing committee
-
-
++ In the House Election in 2012, we chose the candidates who were affiliated with the Democrate party or the Repulican party and did receive votes.
+```{r message = FALSE, warning = FALSE}
+house_2012 <- house_elections %>%
+  filter(party %in% c("D", "R")) %>%
+  select(fec_id, general_votes, -party) %>% 
+  filter(general_votes > 0 & !is.na(general_votes))
+```
++ We joined the three processed tables. 
 ```{r message = FALSE, warnings = FALSE}
-joined1 <- contributions_2 %>%
-  full_join(candidates_2, by = c("cand_id" = "cand_id"))
+join_1 <- candidates_2 %>%
+  inner_join(house_2012, by = c("cand_id" = "fec_id")) %>%
+  inner_join(contributions_2, by = c("cand_id" = "cand_id")) %>%
+  group_by(cand_id) %>%
+  mutate(total_tran = sum(transaction_amt))
+join_2 <- distinct(.data = join_1, cand_id, .keep_all = TRUE)
+```
+### 3. Ploting the relationship between the amount of contributions used to support House candidates and the general votes they received, separated by their party affiliation. 
++ In the first graph, we kept all the data, with the dotted lines indicating the means of relative measures.
+```{r message = FALSE, warning = FALSE}
+ggplot(join_2, aes(x = total_tran, y = general_votes)) +
+  geom_point(alpha = 0.16, color = "red") +
+  ggtitle("Is the money spent on house candidates really worth it?") +
+  scale_x_continuous("Total amount spent in suppoting") +
+  scale_y_continuous("General Votes") +
+  facet_wrap(~ cand_party) +
+  geom_smooth(method = lm, se = FALSE, color = "dodgerblue2", size = 1) +
+  geom_line(y = mean(join_2$general_votes), linetype = 3, size = 0.75) +
+  geom_vline(xintercept = mean(join_2$total_tran), linetype = 3, size = 0.75) +
+  theme_minimal()
 ```
 
-```{r message = FALSE, warnings = FALSE}
-joined2 <- joined1 %>%
-  full_join(committee_2, by = c("cmte_id" = "cmte_id"))
++ Since there are some data far on the x-axis and may skew the overall relationship, we put limits on the second graph to reduce their effects.
+```{r message = FALSE, warning = FALSE}
+ggplot(join_2, aes(x = total_tran, y = general_votes)) +
+  geom_point(alpha = 0.16, color = "red") +
+  ggtitle("Is the money spent on house candidates really worth it?") +
+  scale_x_continuous("Total amount spent to support a candidate", limits = c(0, 2000000), labels = c("0", "0.5M", "1M", "1.5M", "2M")) +
+  scale_y_continuous("General votes a candidate received", limits = c(0, 300000), labels = c("0", "100k", "200k", "300k")) +
+  facet_wrap(~ cand_party) +
+  geom_smooth(method = lm, se = FALSE, color = "dodgerblue2", size = 1) +
+  geom_line(y = mean(join_2$general_votes), linetype = 3, size = 0.75) +
+  geom_vline(xintercept = mean(join_2$total_tran), linetype = 3, size = 0.75) +
+  theme_minimal()
 ```
 
-```{r message = FALSE, warnings = FALSE}
-west <- c("WA", "OR", "CA", "AZ", "NM", "CO", "WY", "MT", "ID", "NV", "UT")
-midwest <- c("ND", "SD", "NE", "KS", "MN", "IA", "MO", "WI", "IL", "MI", "IN", "OH")
-south <- c("TX", "OK", "AR", "LA", "KY", "TN", "MS", "AL", "GA", "FL", "SC", "NC", "VA", "WV", "MD", "DC", "DE")
-northeast <- c("ME", "NH", "VT", "MA", "MA", "CT", "RI", "NJ", "PA", "NY")
-```
++ According to both graphs, we see there is a positive relationship between the amount of transaction spent to support a candidate and the general votes they received. However, the party affiliation of candidates doesn't have much influence on this relationship.
 
-```{r message = FALSE, warnings = FALSE}
-joined3 <- joined2 %>%
-  filter(state %in% west | state %in% midwest) %>%
-  mutate(na.rm = TRUE, region = ifelse(state %in% west, "west", "midwest"))
-
-joined4 <- joined2 %>%
-  filter(state %in% south | state %in% northeast) %>%
-  mutate(na.rm = TRUE, region = ifelse(state %in% south, "south", "northeast"))
-
-joined5 <- joined3 %>%
-  full_join(joined4)
-```
-
+### 4. Next, we want to see whether the type of committee making the transaction has an effect on this relationship. 
++ We create a function that calculates the amount of transaction for each candidate made by a particular type of entity.
 ```{r}
-joined6 <- joined5 %>%
-  full_join(house_elections, by = c("cand_id.x" = "fec_id"))
+entity_type <- function(e_type){
+contributions %>%
+    filter(entity_type == e_type) %>%
+    group_by(cand_id) %>%
+    summarise(transaction_total = sum(transaction_amt, na.rm = TRUE))   %>%
+    inner_join(house_elections, by = c("cand_id" = "fec_id"))   %>%
+    select(cand_id, transaction_total, general_votes)
+}
 ```
-
++ Another function that plots the relationship between the amount a type of entity spent in supporting candidates and the general votes those candidates received in the 2012 house election. (With limits as twice of the means on both axes)
 ```{r}
-library(ggplot2)
-library(tidyverse)
-joined6 %>%
-  filter(!is.na(transaction_amt) & primary_votes != 0 & !is.na(primary_votes))
-
+plot_by_type <- function(e_type){
+ggplot(entity_type(e_type), aes(x = transaction_total, y = general_votes)) +
+  geom_point(alpha = 0.16, color = "red") +
+  ggtitle(e_type) +
+  scale_x_continuous("Total amount spent in suppoting", limits = c(0, 2 * mean(entity_type(e_type)$transaction_total))) +
+  scale_y_continuous("General Votes", limits = c(0, 2 * mean(entity_type(e_type)$general_votes))) +
+  geom_smooth(method = lm, se = FALSE, color = "dodgerblue2", size = 1) +
+  geom_line(y = mean(entity_type(e_type)$general_votes), linetype = 3, size = 0.75) +
+  geom_vline(xintercept = mean(entity_type(e_type)$transaction_total), linetype = 3, size = 0.75) +
+  theme_minimal()
+}
 ```
-
-```{r}
-ggplot(joined6, aes(x = cand_election_yr, y = primary_votes, color = region)) +
-  geom_jitter(alpha = 0.1)
+### 5. We plotted the relationship for different types of eneities. 
+```{r message = FALSE, warning = FALSE}
+plot_by_type("PAC")
+plot_by_type("ORG")
+plot_by_type("COM")
+plot_by_type("CCM")
+plot_by_type("CAN")
+plot_by_type("IND")
+plot_by_type("PTY")
 ```
-
-
-```{r message = FALSE, warnings = FALSE}
-analysis1 <- joined5 %>%
-  group_by(region) %>%
-  summarise(mean_transaction = mean(transaction_amt))
-```
-
-```{r}
-ggplot(joined5, aes(x = cand_election_yr, y = transaction_amt, color = region)) +
-  geom_point(position = "jitter")
-```
-
 
 > Word count: `r wordcountaddin::word_count()`
-
