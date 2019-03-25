@@ -154,8 +154,8 @@ plot_by_type("PTY")
 
 #### General Conclusion
 *  Interestingly, the weak positive relationship between the amount of transaction used to support candidates running for the 2012 House Election and the general votes candidates received did not differ much by candidates' party affiliations (only for Democratic and Republican party in this case), but was influenced by the type of entity making the transactions. 
-
 * Data retrieved from https://classic.fec.gov/finance/disclosure/ftpdet.shtml#archive_link
 
-* ^[Github Repository](https://github.com/jwu13/sds192-mp2)
 > Word count: `r wordcountaddin::word_count()`
+
+^[[Github Repository](https://github.com/jwu13/sds192-mp2)]
