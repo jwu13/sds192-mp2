@@ -11,7 +11,9 @@ library(tidyverse)
 library(ggthemes)
 ```
 ### Introduction 
-The present project is based on the datasets provided by the [Federal Election Committee](https://classic.fec.gov/finance/disclosure/ftpdet.shtml#archive_link) that include data about the various candidates, committees, contributions from committees to candidates they support, and House Elections results in 2012. We were interested in how candidates’ party affiliation and the type of entity making the transactions affect the relationship between the amount of transaction spent (couldn't find the unit, so we assumed in dollars) to support the candidates and the general votes they received.
+* The present project is based on the datasets provided by the [Federal Election Committee](https://classic.fec.gov/finance/disclosure/ftpdet.shtml#archive_link) that include data about the various candidates, committees, contributions from committees to candidates they support, and House Elections results in 2012. 
+* We were interested in how candidates’ party affiliation and the type of entity making the transactions affect the relationship between the amount of transaction spent (couldn't find the unit, so we assumed in dollars) to support the candidates and the general votes they received.
+* We hypothesized the relationship would be affected due to the complex interactions among differences in the philosophy, political and economic strategies that different parties and different entities have, as well as the variety in their scope of influence.
 
 #### 1. Loading data
 ```{r, message = FALSE, warning = FALSE}
@@ -52,11 +54,11 @@ join_1 <- candidates_2 %>%
 join_2 <- distinct(.data = join_1, cand_id, .keep_all = TRUE)
 ```
 #### 3. Ploting the relationship between the amount of contribution used to support House candidates and the general votes they received, separated by their party affiliation. 
-+ In the first graph, we kept all the data, with the dotted lines indicating the means of relative measures.
++ In the first graph, we kept all the data, with the dotted lines indicating the means of relative measures and the blue regression line.
 ```{r message = FALSE, warning = FALSE}
 ggplot(join_2, aes(x = total_tran, y = general_votes)) +
   geom_point(alpha = 0.16, color = "red") +
-  ggtitle("Is the money spent on house candidates really worth it?") +
+  ggtitle("Is the money spent on House candidates really worth it?") +
   scale_x_continuous("Total amount spent in suppoting") +
   scale_y_continuous("General Votes") +
   facet_wrap(~ cand_party) +
@@ -70,7 +72,7 @@ ggplot(join_2, aes(x = total_tran, y = general_votes)) +
 ```{r message = FALSE, warning = FALSE}
 ggplot(join_2, aes(x = total_tran, y = general_votes)) +
   geom_point(alpha = 0.16, color = "red") +
-  ggtitle("Is the money spent on house candidates really worth it?") +
+  ggtitle("Is the money spent on House candidates really worth it?") +
   scale_x_continuous("Total amount spent to support a candidate", limits = c(0, 2000000), labels = c("0", "0.5M", "1M", "1.5M", "2M")) +
   scale_y_continuous("General votes a candidate received", limits = c(0, 300000), labels = c("0", "100k", "200k", "300k")) +
   facet_wrap(~ cand_party) +
@@ -111,51 +113,56 @@ ggplot(entity_type(e_type), aes(x = transaction_total, y = general_votes)) +
 ```
 
 #### 5. We plotted the relationship for all 7 types of eneities. 
-#### CAN = Candidate
+####     Candidate (CAN)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("CAN")
 ```
 
-#### CCM = Candidate Committee
+####     Candidate Committee (CCM)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("CCM")
 ```
 
-#### COM = Committee
+####     Committee (COM)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("COM")
 ```
 
-#### IND = Individual (a person)
+####     Individual (IND)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("IND")
 ```
 
-#### PAC = Political Action Committee
+####     Political Action Committee (PAC)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("PAC")
 ```
 
-#### ORG = Organization (not a committee and not a person)
+####     Organization (ORG) (not a committee and not a person)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("ORG")
 ```
 
-#### PTY = Party Organization
+####     Party Organization (PTY)
 ```{r message = FALSE, warning = FALSE}
 plot_by_type("PTY")
 ```
 
 #### Analysis
-* From the graphs, we found that the there are different relationships between the amount of transaction spent by different entities to support House candidates and the general votes candidates received. 
-* Though the data are very scattered from each other, we did find the general votes candidates received has a moderately positive relationship with the transactions made by Candidates, Candidate Committees and Committees, weakly positive relationships with those made by Political Action Committees and Individuals, and weakly negative relationships with those made by Organizations and Party Organizations. 
-* Therefore, the transactions made by Candidates, Candidates Committees, and Committees could be considered more effective than those made by the other 4 types of entity if we can rule out possible confounding variables.
-* The functions we created can be applied to other elections that has different types of entity making transactions, to other eneity types, and to other party affiliations. 
+* From the graphs we generated above, we found different relationships between the general votes candidates received and the transaction amount spent by different types of entity to support the House candidates. 
+* Though the data are very scattered, we did find the number of general votes candidates received has:
+* (1) a moderately positive relationship with the transactions made by Candidates (CAN), Candidate Committees (CCM) and Committees (COM), 
+* (2) weakly positive relationships with those made by Political Action Committees (PAC) and Individuals (IND), and 
+* (3) weakly negative relationships with those made by Organizations (ORG) and Party Organizations (PTY). 
+* Therefore, the transactions made by Candidates (CAN), Candidates Committees (CCM), and Committees (COM) could be considered more effective than those made by the other 4 types of entity if we can rule out possible confounding variables.
 
 #### General Conclusion
-*  Interestingly, the weak positive relationship between the amount of transaction used to support candidates running for the 2012 House Election and the general votes candidates received did not differ much by candidates' party affiliations (only for Democratic and Republican party in this case), but was influenced by the type of entity making the transactions. 
-* Data retrieved from https://classic.fec.gov/finance/disclosure/ftpdet.shtml#archive_link
+*  From out previous data, graphs and analysis, we can conclude that in the 2012 U.S House Election, the positive relationship between transaction amounts used to support candidates and the general votes they received did not vary much by candidates’ party affiliations (only for Democratic and Republican party in this case), but was influenced by the type of entity that made the transactions.
 
 > Word count: `r wordcountaddin::word_count()`
 
 ^[[Github Repository](https://github.com/jwu13/sds192-mp2)]
+
+^[* The functions we created can be applied to other elections (i.e. the 2015 U.S Presidential Election) that has different types of entity making transactions, to other entity types, and to candidates with other party affiliations.]
+
+^[* Data retrieved from https://classic.fec.gov/finance/disclosure/ftpdet.shtml#archive_link]
